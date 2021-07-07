@@ -17,6 +17,6 @@ Run Locally:
 `sam local start-api`
 
 Delete Stack:
-`aws cloudformation delete-stack --stack-name SAM-API --region us-east-1`
+`aws cloudformation delete-stack --stack-name SAM-API --region {YOUR REGION}`
 
 Helpful Stack Overflow comment can be found [here](https://stackoverflow.com/questions/63524004/how-to-attach-authorization-api-key-to-the-sam-cli-generated-api).
