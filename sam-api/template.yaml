@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  SAM template to deploy a lambda api with an API key access requirement
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+Resources:
+  # API
+  TestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        ApiKeyRequired: true # sets for all methods
+
+
+  # LAMBDA
+  TestLambdaFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: test_lambda_function/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Events:
+        # link the lambda to the API
+        TestLambda:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref TestApi
+            Path: /
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+  
+  # API Key
+  ApiKey: 
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn: [ApiUsagePlan]
+    Properties: 
+      Name: !Join ["", [{"Ref": "AWS::StackName"}, "-apikey"]]
+      Description: "CloudFormation API Key V1"
+      Enabled: true
+      GenerateDistinctId: false
+      Value: CiKQkTVDFr1DhfXD8PsrrIPUQv8mDYF35XncLC6F
+      StageKeys:
+        - RestApiId: !Ref TestApi
+          StageName: Prod
+     
+  
+  # Usage Plan
+  ApiUsagePlan:
+    Type: "AWS::ApiGateway::UsagePlan"
+    DependsOn:
+      - TestApiProdStage
+    Properties:
+      ApiStages: 
+        - ApiId: !Ref TestApi
+          Stage: Prod     
+      Description: !Join [" ", [{"Ref": "AWS::StackName"}, "usage plan"]]
+      Quota:
+        Limit: 1000
+        Period: MONTH
+      UsagePlanName: !Join ["", [{"Ref": "AWS::StackName"}, "-usage-plan"]]
+
+
+  # Connect Key to Plan
+  ApiUsagePlanKey:
+    Type: "AWS::ApiGateway::UsagePlanKey"
+    DependsOn: 
+      - TestApi
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiUsagePlan
