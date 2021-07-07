@@ -4,6 +4,9 @@ This is a SAM API deployment example that:
 - Uses a lambda to handle requests
 - Requires an API Key for request auth
 
+In this example, you can authenticate requests by adding the following to the request header:
+
+`X-API-KEY: CiKQkTVDFr1DhfXD8PsrrIPUQv8mDYF35XncLC6F`
 
 ## Notes
 
